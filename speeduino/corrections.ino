@@ -612,6 +612,9 @@ PID (Best suited to wideband sensors):
 byte correctionAFRClosedLoop(void)
 {
   byte AFRValue = 100;
+  byte egoCycles = configPage6.egoCount;
+  
+  if(currentStatus.RPM < 1000 && currentStatus.TPS == 0) { egoCycles = egoCycles * 8; } // Slow down EGO control when idling
   
   if( (configPage6.egoType > 0) || (configPage2.incorporateAFR == true) ) //afrTarget value lookup must be done if O2 sensor is enabled, and always if incorporateAFR is enabled
   {
@@ -626,9 +629,9 @@ byte correctionAFRClosedLoop(void)
   {
     AFRValue = currentStatus.egoCorrection; //Need to record this here, just to make sure the correction stays 'on' even if the nextCycle count isn't ready
     
-    if((ignitionCount >= AFRnextCycle) || (ignitionCount < (AFRnextCycle - configPage6.egoCount)))
+    if((ignitionCount >= AFRnextCycle) || (ignitionCount < (AFRnextCycle - egoCycles)))
     {
-      AFRnextCycle = ignitionCount + configPage6.egoCount; //Set the target ignition event for the next calculation
+      AFRnextCycle = ignitionCount + egoCycles; //Set the target ignition event for the next calculation
         
       //Check all other requirements for closed loop adjustments
       if( (currentStatus.coolant > (int)(configPage6.egoTemp - CALIBRATION_TEMPERATURE_OFFSET)) && (currentStatus.RPM > (unsigned int)(configPage6.egoRPM * 100)) && (currentStatus.TPS <= configPage6.egoTPSMax) && (currentStatus.O2 < configPage6.ego_max) && (currentStatus.O2 > configPage6.ego_min) && (currentStatus.runSecs > configPage6.ego_sdelay) &&  (BIT_CHECK(currentStatus.status1, BIT_STATUS1_DFCO) == 0) )
