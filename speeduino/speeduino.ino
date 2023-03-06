@@ -203,7 +203,7 @@ void loop(void)
     {
       BIT_CLEAR(TIMER_mask, BIT_TIMER_15HZ);
       #if TPS_READ_FREQUENCY == 15
-        readTPS(); //TPS reading to be performed every 32 loops (any faster and it can upset the TPSdot sampling time)
+        readTPS(false); //TPS reading to be performed every 32 loops (any faster and it can upset the TPSdot sampling time)
       #endif
       #if  defined(CORE_TEENSY35)       
           if (configPage9.enable_intcan == 1) // use internal can module
@@ -277,7 +277,7 @@ void loop(void)
       if (configPage2.canVAGCluster == true) { sendVAGCluster(); }
       #endif
       #if TPS_READ_FREQUENCY == 30
-        readTPS();
+        readTPS(false);
       #endif
       readO2();
       readO2_2();
