@@ -287,6 +287,7 @@ uint16_t correctionAccel(void)
   int16_t accelValue = 100;
   int16_t MAP_change = 0;
   int16_t TPS_change = 0;
+  bool tippingIn = false;
 
   if(configPage2.aeMode == AE_MODE_MAP)
   {
@@ -299,7 +300,7 @@ uint16_t correctionAccel(void)
   {
     //Get the TPS rate change
     TPS_change = (currentStatus.TPS - currentStatus.TPSlast);
-    //currentStatus.tpsDOT = ldiv(1000000, (TPS_time - TPSlast_time)).quot * TPS_change; //This is the % per second that the TPS has moved
+    if((TPS_change > 0) && (currentStatus.TPSlast < configPage2.taeThresh)) { tippingIn = true; } //Tip-in Adder when accelerating from "closed" TPS (very low TPS values)
     currentStatus.tpsDOT = (TPS_READ_FREQUENCY * TPS_change) / 2; //This is the % per second that the TPS has moved, adjusted for the 0.5% resolution of the TPS
   }
   
@@ -411,7 +412,7 @@ uint16_t correctionAccel(void)
     else if(configPage2.aeMode == AE_MODE_TPS)
     {
       //Check for only very small movement. This not only means we can skip the lookup, but helps reduce false triggering around 0-2% throttle openings
-      if (abs(TPS_change) <= configPage2.taeMinChange)
+      if ((abs(TPS_change) <= configPage2.taeMinChange) && (tippingIn == false))
       {
         accelValue = 100;
         currentStatus.tpsDOT = 0;
